@@ -1,0 +1,127 @@
+// datasource db defines the database connection settings.
+// It is configured for PostgreSQL and uses an environment variable for the connection URL.
+// The 'extensions' feature enables the use of PostgreSQL-specific data types.
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+}
+
+// generator db configures Prisma Client settings.
+// It is set up to use Prisma Client Python with asyncio interface and specific features.
+generator db {
+  provider             = "prisma-client-py"
+  interface            = "asyncio"
+  recursive_type_depth = 5
+  previewFeatures      = ["postgresqlExtensions"]
+}
+
+model User {
+  id             String         @id @default(cuid())
+  email          String         @unique
+  hashedPassword String
+  role           Role           @default(BASICUSER)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  apiKey         String?        @unique
+  rateLimit      Int? // Optional: define rate limit for API calls if necessary
+  prompts        UserPrompt[]
+  Token          Token[]
+  Subscription   Subscription[]
+  AuditLog       AuditLog[]
+  APIAccessLog   APIAccessLog[]
+  RateLimit      RateLimit[]
+}
+
+model UserPrompt {
+  id           String       @id @default(cuid())
+  userId       String
+  originalText String
+  refinedText  String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  status       PromptStatus
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Token {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Subscription {
+  id                 String           @id @default(cuid())
+  userId             String
+  type               SubscriptionType
+  startDate          DateTime         @default(now())
+  endDate            DateTime
+  isActive           Boolean          @default(true)
+  subscriptionPlan   SubscriptionPlan @relation(fields: [subscriptionPlanId], references: [id])
+  subscriptionPlanId String
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model SubscriptionPlan {
+  id             String         @id @default(cuid())
+  name           String
+  price          Float
+  durationInDays Int
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  subscriptions  Subscription[]
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  details   String
+  userId    String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+}
+
+model APIAccessLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  endpoint  String
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+}
+
+model RateLimit {
+  id       String   @id @default(cuid())
+  userId   String
+  endpoint String
+  count    Int
+  resetAt  DateTime
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  BASICUSER
+  SUBSCRIBER
+  ADMIN
+}
+
+enum PromptStatus {
+  PENDING
+  COMPLETED
+  ERROR
+}
+
+enum SubscriptionType {
+  FREE
+  MONTHLY
+  YEARLY
+}
+

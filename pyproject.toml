@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "uiuukm"
+version = "0.1.0"
+description = "To create a single API endpoint for refining LLM prompts using GPT-4, we'll leverage the FastAPI framework, considering its asynchronous support and its ease in building APIs. Here's a comprehensive project plan including the steps, technologies used, and key considerations:"
+authors = ["AutoGPT <info@agpt.co>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.11"
+fastapi = "*"
+openai = "^0.22.0"
+prisma = "*"
+pydantic = "*"
+uvicorn = "*"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
